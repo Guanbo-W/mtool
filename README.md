@@ -4,29 +4,30 @@ Structural Penalization in Cox Model with Time-dependent Covariates
 How to load the package:
 Under the mtool directory, build the package and then library it.
 
-Example Data:
-The example data genereting mechnism is seen in GenerateData.R
+
+## Examples:
+The example data generating mechanism is seen in GenerateData.R
 
 How to perform cross-validation and the test of code is seen in TEST.R
 
 An example of obtained regularization path is seen in S1_Regularization Path.pdf
 
-Functions:
+## Functions:
 
 1) lik (betas, covariates, Id, Event, Fup, Start, Stop)
 
-Return the minus log likelihood of Cox model divided by the sample size.
+*Return the minus log likelihood of Cox model divided by the sample size*
 
 2) der_lik (betas, covariates, Id, Event, Fup, Start, Stop)
 
 
-Return the minus derivative log likelihood of Cox model divided by the sample size.
+*Return the minus derivative log likelihood of Cox model divided by the sample size*
 
 3) SurvGraphSelect(covariates, Id, Event, Fup, Start, Stop, grp, grpV, etaG, regul, betas, t, alpha, epsilon, lam1, lam2 = 0.0, lam3 = 0.0, num_threads = -1L, intercept = FALSE, resetflow = FALSE, verbose = FALSE, pos = FALSE, clever = TRUE, eval = TRUE, size_group = 1L, transpose = FALSE)
 
-Return the coefficients estimate for a specific penalization hyper-parameter lambda
+*Return the coefficients estimate for a specific penalization hyper-parameter lambda*
 
-Arguments:
+## Arguments:
 
 betas: a vector of initial values of coefficients
 
