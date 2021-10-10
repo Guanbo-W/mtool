@@ -60,4 +60,6 @@ lam1: penalization hyper-parameter
 
 numThreads: (optional, number of threads for exploiting multi-core / multi-cpus. By default, it takes the value -1, which automatically selects all the available CPUs/cores)
 
+<!-- CONTRIBUTING -->
+fgdsa
 
