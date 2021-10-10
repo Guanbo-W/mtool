@@ -7,6 +7,10 @@ Under the mtool directory, build the package and then library it.
 Example Data:
 The example data genereting mechnism is seen in GenerateData.R
 
+How to perform cross-validation and the test of code is seen in TEST.R
+
+An example of obtained regularization path is seen in S1_Regularization Path.pdf
+
 Functions:
 
 1) lik (betas, covariates, Id, Event, Fup, Start, Stop)
