@@ -1,8 +1,8 @@
 # mtool
-Structural Penalization in Cox Model with Time-dependent Covariates
+An R package for Structural Penalization in Cox Model with Time-dependent Covariates
 
 How to load the package:
-Under the mtool directory, build the package and then library it.
+Under the mtool directory, type `R CMD build mtool` to load the package.
 
 ## Examples:
 The example data generating mechanism is seen in GenerateData.R
