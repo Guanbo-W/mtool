@@ -13,15 +13,15 @@ An example of obtained regularization path is seen in S1_Regularization Path.pdf
 
 ## Functions:
 
-1) 'lik (betas, covariates, Id, Event, Fup, Start, Stop)'
+1) `lik (betas, covariates, Id, Event, Fup, Start, Stop)`
 
 *Return the minus log likelihood of Cox model divided by the sample size*
 
-2) 'der_lik (betas, covariates, Id, Event, Fup, Start, Stop)'
+2) `der_lik (betas, covariates, Id, Event, Fup, Start, Stop)`
 
 *Return the minus derivative log likelihood of Cox model divided by the sample size*
 
-3) 'SurvGraphSelect(covariates, Id, Event, Fup, Start, Stop, grp, grpV, etaG, regul, betas, t, alpha, epsilon, lam1, lam2 = 0.0, lam3 = 0.0, num_threads = -1L, intercept = FALSE, resetflow = FALSE, verbose = FALSE, pos = FALSE, clever = TRUE, eval = TRUE, size_group = 1L, transpose = FALSE)'
+3) `SurvGraphSelect(covariates, Id, Event, Fup, Start, Stop, grp, grpV, etaG, regul, betas, t, alpha, epsilon, lam1, lam2 = 0.0, lam3 = 0.0, num_threads = -1L, intercept = FALSE, resetflow = FALSE, verbose = FALSE, pos = FALSE, clever = TRUE, eval = TRUE, size_group = 1L, transpose = FALSE)`
 
 *Return the coefficients estimate for a specific penalization hyper-parameter lambda*
 
