@@ -5,14 +5,14 @@ How to load the package:
 Under the mtool directory, build the package and then library it.
 
 
-## Examples:
+- Examples:
 The example data generating mechanism is seen in GenerateData.R
 
 How to perform cross-validation and the test of code is seen in TEST.R
 
 An example of obtained regularization path is seen in S1_Regularization Path.pdf
 
-## Functions:
+- Functions:
 
 1) lik (betas, covariates, Id, Event, Fup, Start, Stop)
 
@@ -27,7 +27,7 @@ An example of obtained regularization path is seen in S1_Regularization Path.pdf
 
 *Return the coefficients estimate for a specific penalization hyper-parameter lambda*
 
-## Arguments:
+- Arguments:
 
 betas: a vector of initial values of coefficients
 
