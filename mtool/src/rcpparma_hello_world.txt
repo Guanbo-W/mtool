@@ -1,0 +1,245 @@
+// -*- mode: C++; c-indent-level: 4; c-basic-offset: 4; indent-tabs-mode: nil; -*-
+#include "RcppArmadillo.h"
+#include <iostream>
+#include <string>
+#include "spams.h"
+// we only include RcppArmadillo.h which pulls Rcpp.h in for us
+
+
+// via the depends attribute we tell Rcpp to create hooks for
+// RcppArmadillo so that the build process will know what to do
+//
+// [[Rcpp::depends(RcppArmadillo)]]
+
+// simple example of creating two matrices and
+// returning the result of an operatioon on them
+//
+// via the exports attribute we tell Rcpp to make this function
+// available from R
+//
+
+
+// [[Rcpp::export]]
+arma::vec grad_ls_single(
+        arma::vec& x,
+        double& y,
+        arma::vec& param,
+        int& p
+) {
+    // compute residual
+    arma::vec grad(p);
+    grad = -2.0 * x * (y - dot(x, param)); 
+    return grad;
+}
+
+// [[Rcpp::export]]
+arma::vec grad_ls_full(
+        arma::mat& x,
+        arma::colvec& y,
+        arma::vec& param,
+        int& p
+) {
+    // compute residual
+    arma::vec grad(p);
+    grad = -2.0 * trans(x) * (y - x * param); 
+    return grad;
+}
+
+// [[Rcpp::export]]
+arma::mat proximal(
+        arma::mat U,
+        std::string regul,
+        Rcpp::IntegerVector group_id,
+        double lam1,
+        double lam2 = 0.0,
+        double lam3 = 0.0,
+        int num_threads = -1,
+        bool intercept = false,
+        bool resetflow = false,
+        bool verbose = false,
+        bool pos = false,
+        bool clever = true,
+        bool eval = true,
+        int size_group = 1,
+        bool transpose = false){
+    // dimensions
+    int p = U.n_rows;
+    int K = U.n_cols;
+    int pK = int (p*K);
+    
+    // read in U and convert to spams::Matrix<double> alpha0
+    double* ptrU = new double[pK];
+    for (int i = 0; i < pK; i++) {
+        ptrU[i] = U(i,0);
+    }
+    Matrix<double> alpha0(ptrU,p,K); 
+    // alpha0.print("\n alpha0 \n");
+    
+    // read in regul and convert to char
+    int l = regul.length();
+    char* name_regul = new char[l];
+    for (int i = 0; i < l+1; i++) {
+        name_regul[i] = regul[i];
+        // std::cout <<"\n char " << name_regul[i];
+    }
+    
+    // std::cout << "\n name_regul " << name_regul;
+    
+    // Initialize alpha - proximal operator
+    Matrix<double> alpha(p,K);
+    alpha.setZeros();
+    
+    // read in group_id and convert to spams::Vector<int> groups
+    int* ptrG = new int[pK];
+    for (int i = 0; i < pK; i++) {
+        ptrG[i] = group_id[i];
+    }
+    
+    Vector<int> groups(ptrG, pK);
+    // groups.print("\n groups \n");
+    
+    _proximalFlat(&alpha0,&alpha,&groups,num_threads,
+                  lam1,lam2,lam3,intercept,
+                  resetflow,name_regul,verbose,pos,
+                  clever,eval,size_group,transpose);
+    // alpha.print("\n alpha \n");
+    
+    arma::mat V(p, K);
+    for (int i = 0; i < pK; i++) {
+        V(i,0) = alpha[i];
+    }
+    return V;
+}
+
+// [[Rcpp::export]]
+Rcpp::List mtool(
+        arma::mat X,
+        arma::colvec Y,
+        int loss,
+        std::string regul,
+        Rcpp::IntegerVector group_id,
+        double lam1,
+        double lam2,
+        double lam3,
+        double learning_rate,
+        double tolerence,
+        int niter_inner,
+        int maxit) {
+    
+    // initialize param
+    int n = X.n_rows;
+    int p = X.n_cols;
+    
+    arma::vec grad(p);
+    arma::vec temp1(p);
+    arma::vec temp2(p);
+    
+    arma::vec param(p);
+    param.zeros();
+    arma::vec param_old(p);
+    
+    arma::vec param_update(p);
+    double diff;
+    int counter_outer = 0;
+    
+    // compute mu: mean gradient at param_old
+    while (true) {
+        arma::vec param_old(param);
+        grad = grad_ls_full(X,  Y,  param_old,  p)/n;
+
+        // inner loop
+        for (int i = 0; i < niter_inner; ++i) {
+            int index = randi(arma::distr_param(0, n-1));
+            arma::vec x_sample = vectorise(X.row(index));
+            double y_sample = Y(index);
+
+            temp1 = grad_ls_single(x_sample, y_sample, param, p);
+            temp2 = grad_ls_single(x_sample, y_sample, param_old, p);
+
+            param = param - learning_rate * (temp1 - temp2 + grad);
+
+            // Rcpp::Rcout << "\n param before \n" << param <<"\n";
+
+            // convert param vector to param_mat matrix
+            arma::mat param_mat(param);
+            param_mat.reshape(p, 1);
+
+            // Rcpp::Rcout << "\n param_mat \n" << param <<"\n";
+
+            // call proximal function
+            param_mat = proximal(param_mat, regul, group_id, lam1);
+            // Rcpp::Rcout << "\n param_mat after \n" << param_mat <<"\n";
+            
+            // convert matrix back to vector
+            param = vectorise(param_mat);
+            // Rcpp::Rcout << "\n param after \n" << param <<"\n";
+        }
+        counter_outer += 1;
+        Rcpp::Rcout << "\n Iteration \n" << counter_outer <<"\n";
+        // Rcpp::Rcout << "\n param_old \n" << param_old <<"\n";
+        // Rcpp::Rcout << "\n param \n" << param << "\n";
+        // Rcpp::Rcout << "\n grad \n" << grad << "\n";
+        param_update = param - param_old;
+        // Rcpp::Rcout << "\n param_update \n" << param_update <<"\n";
+        
+        diff = arma::norm(param_update, 2);
+        Rcpp::Rcout << "\n diff \n" << diff <<"\n";
+        
+        
+        if (diff < tolerence || counter_outer>= maxit){
+            break;
+        }
+    }
+    
+    Rcpp::List result = Rcpp::List::create(Rcpp::Named("Estimates")        = param,
+                                           Rcpp::Named("Gradient")         = grad);
+    return result;
+}
+
+
+
+
+/*** R
+
+
+
+proximal(matrix(7:12, nrow = 6), group_id = c(1,1,1,2,2,2), regul = "l1", lam1 = 5, lam2 = 1)
+*/
+
+
+/*** R
+# n <- 10
+# p <- 2
+# x <- matrix(1:4, n, 2)
+# beta <- c(1, 1)
+# y <- x %*% beta 
+
+
+n <- 100000
+p <- 1000
+x <- matrix(rnorm(n*p), n, p)
+beta.nz <- c(3, -2)
+beta <- c(beta.nz, rep(0, p-length(beta.nz)))
+y <- x %*% beta + rnorm(n, mean=0, sd=0.1)
+
+
+loss <- 1
+regul <- "l1"
+group_id <- rep(0L, p)
+
+lam1 <- 1e-3
+lam2 <- 0.1
+lam3 <- 0.1
+
+tol <- 1e-20
+sgd_m <- 5*n
+maxit <- 10000
+
+# index <- sample(1:n, size = 1)
+# grad_ls(x = x[index,], y = y[index], param = rep(0,p), p = 2); -2 * x[1,] * y[1]
+# grad_ls_full(x = x, y = y, param = rep(0,p), p = 2); -2 * t(x) %*% y
+
+lr <- 1e-2
+mtool(x, y, loss, regul, group_id, lam1, lam2, lam3, lr, tol, sgd_m, maxit)
+*/
+
